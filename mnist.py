@@ -15,10 +15,19 @@ def fetch(url):
         f.write(data)
   return np.frombuffer(gzip.decompress(data), dtype=np.uint8).copy()
 
-X_train = fetch("http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28, 28))
-Y_train = fetch("http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz")[8:]
+X = fetch("http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28, 28))
+Y = fetch("http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz")[8:]
 X_test = fetch("http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28, 28))
 Y_test = fetch("http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz")[8:]
+
+#Validation split
+rand=np.arange(60000)
+np.random.shuffle(rand)
+train_no=rand[:50000]
+val_no=np.setdiff1d(rand,train_no)
+X_train,X_val=X[train_no,:,:],X[val_no,:,:]
+Y_train,Y_val=Y[train_no],Y[val_no]
+
 
 #Sigmoid and its derivative
 def sigmoid(x):
@@ -68,36 +77,32 @@ epochs=2000
 lr=0.001
 batch=128
 
-losses,accuries=[],[]
+losses,accuries,val_accuracies=[],[],[]
 
 for i in range(epochs):
     sample=np.random.randint(0,X_train.shape[0],size=(batch))
     x=X_train[sample].reshape((-1,28*28))
     y=Y_train[sample]
 
-    out,update_l1,update_l2=forward_backward_pass(x,y)
-  
+    out,update_l1,update_l2=forward_backward_pass(x,y)   
     category=np.argmax(out,axis=1)
     accuracy=(category==y).mean()
+    accuries.append(accuracy.item())
+    
+    loss=((category-y)**2).mean()
+    losses.append(loss.item())
+    
+    #testing our model using the validation set
+    
+
 
     l1=l1-lr*update_l1
     l2=l2-lr*update_l2
-    if(i%20==0):print(accuracy)
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
+    if(i%20==0):    
+      X_val=X_val.reshape((-1,28*28))
+      val_out=np.argmax(softmax(sigmoid(X_val.dot(l1)).dot(l2)),axis=1)
+      val_acc=(val_out==Y_val).mean()
+      val_accuracies.append(val_acc.item())
+      print(accuracy,val_acc)
 
 
