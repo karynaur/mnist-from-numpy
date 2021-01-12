@@ -1,21 +1,3 @@
-"""
-
--Design the network.
--Define the activation functions
-
-
-##Tier 1
----Sigmoid
----Softmax
-
-
-##Teir 2
----ReLU
----log softmax
----add bias
-
-"""
-
 import numpy as np
 import requests, gzip, os, hashlib
 
@@ -64,39 +46,34 @@ l2=init(128,10)
 
 #forward and backward pass
 def forward_backward_pass(x,y):
+  targets = np.zeros((len(y),10), np.float32)
+  targets[range(targets.shape[0]),y] = 1
+
   x_l1p=x.dot(l1)
   x_sigmoid=sigmoid(x_l1p)
   x_l2p=x_sigmoid.dot(l2)
   out=softmax(x_l2p)
-  """
-  x_l1p is Z1
-  x_sigmoid is A1
 
-  x_l2 is Z3
-  out is A3
-  
- """
-  print(out.shape)
-  error=2*(out-y)/out.shape[0]*d_softmax(x_l2p)
-
-  update_l2=np.outer(error,x_sigmoid)
-  
+  error=2*(out-targets)/out.shape[0]*d_softmax(x_l2p)
+  update_l2=x_sigmoid.T@error
+    
+    
   error=((l2).dot(error.T)).T*d_sigmoid(x_l1p)
-  update_l1=np.outer(error,x)
+  update_l1=x.T@error
 
   return out,update_l1,update_l2 
 
 #training
-def training(epochs,l1,l2):
-  lr=0.001
-  batch=64
+epochs=2000
+lr=0.001
+batch=128
 
-  losses,accuries=[],[]
+losses,accuries=[],[]
 
-  for i in range(epochs):
+for i in range(epochs):
     sample=np.random.randint(0,X_train.shape[0],size=(batch))
     x=X_train[sample].reshape((-1,28*28))
-    y=Y_train[sample].reshape(-1,1)
+    y=Y_train[sample]
 
     out,update_l1,update_l2=forward_backward_pass(x,y)
   
@@ -105,9 +82,9 @@ def training(epochs,l1,l2):
 
     l1=l1-lr*update_l1
     l2=l2-lr*update_l2
-    print(accuracy)
+    if(i%20==0):print(accuracy)
 
-training(10,l1,l2)
+
 
 
 
