@@ -17,7 +17,7 @@ def fetch(url):
 
 X = fetch("http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28, 28))
 Y = fetch("http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz")[8:]
-X_test = fetch("http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28, 28))
+X_test = fetch("http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz")[0x10:].reshape((-1, 28*28))
 Y_test = fetch("http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz")[8:]
 
 #Validation split
@@ -73,36 +73,44 @@ def forward_backward_pass(x,y):
   return out,update_l1,update_l2 
 
 #training
-epochs=2000
+epochs=10000
 lr=0.001
 batch=128
 
 losses,accuries,val_accuracies=[],[],[]
 
 for i in range(epochs):
+    #randomize and create batches
     sample=np.random.randint(0,X_train.shape[0],size=(batch))
     x=X_train[sample].reshape((-1,28*28))
     y=Y_train[sample]
 
     out,update_l1,update_l2=forward_backward_pass(x,y)   
     category=np.argmax(out,axis=1)
+    
     accuracy=(category==y).mean()
     accuries.append(accuracy.item())
     
     loss=((category-y)**2).mean()
     losses.append(loss.item())
     
-    #testing our model using the validation set
-    
-
-
+    #SGD 
     l1=l1-lr*update_l1
     l2=l2-lr*update_l2
+
+
+    #testing our model using the validation set every 20 epochs
     if(i%20==0):    
       X_val=X_val.reshape((-1,28*28))
       val_out=np.argmax(softmax(sigmoid(X_val.dot(l1)).dot(l2)),axis=1)
       val_acc=(val_out==Y_val).mean()
       val_accuracies.append(val_acc.item())
-      print(accuracy,val_acc)
+    if(i%1000==0): print(f'For {i}th epoch: train accuracy: {accuracy:.3f}| validation accuracy:{val_acc:.3f}')
 
+
+
+test_out=np.argmax(softmax(sigmoid(X_test.dot(l1)).dot(l2)),axis=1)
+test_acc=(test_out==Y_test).mean().item()
+print(f'Test accuracy = {test_acc:.4f}')
+ 
 
