@@ -112,5 +112,4 @@ for i in range(epochs):
 test_out=np.argmax(softmax(sigmoid(X_test.dot(l1)).dot(l2)),axis=1)
 test_acc=(test_out==Y_test).mean().item()
 print(f'Test accuracy = {test_acc:.4f}')
- 
-
+np.savez('weights',l1,l2)
