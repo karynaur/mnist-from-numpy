@@ -3,7 +3,7 @@ import requests, gzip, os, hashlib
 
 
 #fetch data
-path='/mnt/e/ADITYA/EDUCATION/ML/Jupyter Lab/MNIST/mnist-from-numpy/data'
+path='./data'
 def fetch(url):
   fp = os.path.join(path, hashlib.md5(url.encode('utf-8')).hexdigest())
   if os.path.isfile(fp):
